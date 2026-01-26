@@ -6,6 +6,7 @@ import DebouncedSearch from './solutions/DebouncedSearch';
 import Accordian from './solutions/Accordian';
 import StaleClosureExample from './solutions/StaleClouserExample';
 import ContactForm from './solutions/ContactForm';
+import InfiniteScroll from './solutions/InfiniteScroll';
 
 // Placeholder component for questions not yet implemented
 // eslint-disable-next-line react-refresh/only-export-components
@@ -100,7 +101,7 @@ export const questions: Question[] = [
     description: 'Create an infinite scroll list with loading states',
     category: 'core',
     difficulty: 'hard',
-    component: Placeholder,
+    component: InfiniteScroll,
   },
   {
     id: 'dropdown-keyboard',
