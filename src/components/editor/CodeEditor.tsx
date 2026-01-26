@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import Editor from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
-import * as monaco from 'monaco-editor';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import type { Question } from '../../features/machineCoding/types';
 import { Button } from '../ui/Button';
@@ -16,124 +15,151 @@ interface CodeEditorProps {
 export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
   const { theme } = useThemeContext();
   const [localCode, setLocalCode] = useState(code);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLocalCode(code);
   }, [code]);
 
-  /* ------------------------------------------------
-   * MONACO CONFIG — BEFORE EDITOR LOADS
-   * ------------------------------------------------ */
-  const handleBeforeMount = (m: typeof monaco) => {
-    /* ---------------- DARK THEME ---------------- */
-    m.editor.defineTheme('colorful-dark', {
-      base: 'vs-dark',
-      inherit: true,
+  // Calculate line numbers
+  const lines = localCode.split('\n');
+  const lineCount = lines.length;
 
-      rules: [
-        { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
-        { token: 'string', foreground: 'CE9178' },
-        { token: 'number', foreground: 'B5CEA8' },
-      ],
-
-      semanticHighlighting: true,
-      semanticTokenColors: {
-        keyword: '#C586C0',
-        variable: '#9CDCFE',
-        function: '#DCDCAA',
-        method: '#DCDCAA',
-        type: '#4EC9B0',
-        class: '#4EC9B0',
-        interface: '#4EC9B0',
-        parameter: '#9CDCFE',
-        property: '#9CDCFE',
-        enumMember: '#4EC9B0',
-
-        // JSX
-        jsxTagName: '#FFD700',
-        jsxAttribute: '#9CDCFE',
-      },
-
-      colors: {
-        'editor.background': '#1E1E1E',
-        'editor.foreground': '#D4D4D4',
-        'editorLineNumber.foreground': '#858585',
-        'editor.selectionBackground': '#264F78',
-        'editor.lineHighlightBackground': '#2A2D2E',
-      },
-    });
-
-    /* ---------------- LIGHT THEME ---------------- */
-    m.editor.defineTheme('colorful-light', {
-      base: 'vs',
-      inherit: true,
-
-      rules: [
-        { token: 'comment', foreground: '008000', fontStyle: 'italic' },
-        { token: 'string', foreground: 'A31515' },
-        { token: 'number', foreground: '098658' },
-      ],
-
-      semanticHighlighting: true,
-      semanticTokenColors: {
-        keyword: '#0000FF',
-        variable: '#001080',
-        function: '#795E26',
-        method: '#795E26',
-        type: '#267F99',
-        class: '#267F99',
-        interface: '#267F99',
-        parameter: '#001080',
-        property: '#001080',
-
-        // JSX
-        jsxTagName: '#800000',
-        jsxAttribute: '#FF0000',
-      },
-
-      colors: {
-        'editor.background': '#FFFFFF',
-        'editor.foreground': '#000000',
-        'editorLineNumber.foreground': '#237893',
-        'editor.selectionBackground': '#ADD6FF',
-        'editor.lineHighlightBackground': '#F5F5F5',
-      },
-    });
-
-    /* -------- TypeScript / TSX compiler -------- */
-    m.languages.typescript.typescriptDefaults.setCompilerOptions({
-      target: m.languages.typescript.ScriptTarget.ES2020,
-      jsx: m.languages.typescript.JsxEmit.React,
-      moduleResolution:
-        m.languages.typescript.ModuleResolutionKind.NodeJs,
-      allowNonTsExtensions: true,
-      noEmit: true,
-      lib: ['ES2020', 'DOM'],
-    });
-  };
-
-  const handleMount = (editor: editor.IStandaloneCodeEditor) => {
-    editorRef.current = editor;
-  };
-
-  const handleChange = (value?: string) => {
-    const next = value ?? '';
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const next = e.target.value;
     setLocalCode(next);
     onCodeChange(next);
   };
 
-  const handleFormat = async () => {
-    await editorRef.current
-      ?.getAction('editor.action.formatDocument')
-      ?.run();
+  const handleFormat = () => {
+    // Simple formatting - indent with 2 spaces
+    const formatted = localCode
+      .split('\n')
+      .map((line) => {
+        // Basic indentation preservation
+        const trimmed = line.trim();
+        if (!trimmed) return '';
+        return line;
+      })
+      .join('\n');
+    
+    setLocalCode(formatted);
+    onCodeChange(formatted);
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(localCode);
   };
 
-  const editorTheme = theme === 'dark' ? 'colorful-dark' : 'colorful-light';
+  const highlighterStyle = theme === 'dark' ? vscDarkPlus : vs;
+  const bgColor = theme === 'dark' ? '#1E1E1E' : '#FFFFFF';
+  const textColor = theme === 'dark' ? '#D4D4D4' : '#000000';
+  const lineNumberColor = theme === 'dark' ? '#858585' : '#237893';
+  const lineNumberBg = theme === 'dark' ? '#252526' : '#F8F8F8';
+  
+  // Scrollbar colors based on theme
+  const scrollbarTrackColor = theme === 'dark' ? '#1E1E1E' : '#F5F5F5';
+  const scrollbarThumbColor = theme === 'dark' ? '#424242' : '#CCCCCC';
+  const scrollbarThumbHoverColor = theme === 'dark' ? '#4E4E4E' : '#B3B3B3';
+
+  // Generate unique ID for this editor instance to scope styles
+  const editorId = `code-editor-${question.id}`;
+
+  // Inject scrollbar styles into document head for better reliability
+  useEffect(() => {
+    const styleId = `editor-scrollbar-${editorId}`;
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+    
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
+    }
+    
+    styleElement.textContent = `
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar {
+        width: 12px;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-track {
+        background: ${scrollbarTrackColor} !important;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb {
+        background: ${scrollbarThumbColor} !important;
+        border-radius: 6px;
+        border: 2px solid ${scrollbarTrackColor} !important;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb:hover {
+        background: ${scrollbarThumbHoverColor} !important;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar:horizontal {
+        height: 12px;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-track:horizontal {
+        background: ${scrollbarTrackColor} !important;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb:horizontal {
+        background: ${scrollbarThumbColor} !important;
+        border-radius: 6px;
+        border: 2px solid ${scrollbarTrackColor} !important;
+      }
+      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb:horizontal:hover {
+        background: ${scrollbarThumbHoverColor} !important;
+      }
+      .highlight-overlay::-webkit-scrollbar {
+        display: none !important;
+      }
+      .highlight-overlay {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+      }
+      .line-numbers::-webkit-scrollbar {
+        display: none !important;
+      }
+      .line-numbers {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+      }
+      .highlight-overlay pre {
+        white-space: pre !important;
+        word-wrap: normal !important;
+        overflow-wrap: normal !important;
+        overflow: visible !important;
+        margin: 0 !important;
+      }
+      .highlight-overlay code {
+        white-space: pre !important;
+        word-wrap: normal !important;
+        overflow-wrap: normal !important;
+      }
+    `;
+    
+    return () => {
+      const element = document.getElementById(styleId);
+      if (element) {
+        element.remove();
+      }
+    };
+  }, [editorId, scrollbarTrackColor, scrollbarThumbColor, scrollbarThumbHoverColor]);
+
+  // Sync scroll: only textarea scrolls, highlight and line numbers follow
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    const highlight = highlightRef.current;
+    const lineNumbers = lineNumbersRef.current;
+    
+    if (textarea && highlight && lineNumbers) {
+      const handleScroll = () => {
+        highlight.scrollTop = textarea.scrollTop;
+        highlight.scrollLeft = textarea.scrollLeft;
+        lineNumbers.scrollTop = textarea.scrollTop;
+      };
+      
+      textarea.addEventListener('scroll', handleScroll);
+      return () => textarea.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   return (
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -159,27 +185,99 @@ export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
       </div>
 
       {/* Editor */}
-      <div className="flex-1">
-        <Editor
-          height="100%"
-          language="typescriptreact"
-          value={localCode}
-          theme={editorTheme}
-          beforeMount={handleBeforeMount}
-          onMount={handleMount}
-          onChange={handleChange}
-          options={{
-            fontSize: 14,
-            minimap: { enabled: true },
-            wordWrap: 'on',
-            automaticLayout: true,
-            tabSize: 2,
-            formatOnPaste: true,
-            formatOnType: true,
-            bracketPairColorization: { enabled: true },
-            semanticHighlighting: true,
+      <div className="flex-1 relative overflow-hidden" style={{ background: bgColor }}>
+
+        {/* Line Numbers */}
+        <div
+          ref={lineNumbersRef}
+          className="absolute left-0 top-0 bottom-0 line-numbers pointer-events-none overflow-hidden"
+          style={{
+            width: '50px',
+            paddingTop: '16px',
+            paddingBottom: '16px',
+            background: lineNumberBg,
+            borderRight: `1px solid ${theme === 'dark' ? '#3E3E42' : '#E8E8E8'}`,
+            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            textAlign: 'right',
+            paddingRight: '12px',
+            paddingLeft: '8px',
+            color: lineNumberColor,
+            userSelect: 'none',
           }}
-        />
+        >
+          {Array.from({ length: lineCount }, (_, i) => (
+            <div
+              key={i + 1}
+              style={{
+                minHeight: '21px', // 14px * 1.5 line-height
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+              }}
+            >
+              {i + 1}
+            </div>
+          ))}
+        </div>
+
+        {/* Syntax Highlighter Overlay - not scrollable, synced with textarea */}
+        <div 
+          className="absolute inset-0 pointer-events-none highlight-overlay" 
+          ref={highlightRef}
+          style={{ 
+            overflow: 'hidden',
+            left: '50px', // Account for line numbers
+            right: 0,
+          }}
+        >
+          <SyntaxHighlighter
+            language="tsx"
+            style={highlighterStyle}
+            customStyle={{
+              margin: 0,
+              padding: '16px',
+              paddingLeft: '16px',
+              background: 'transparent',
+              fontSize: '14px',
+              lineHeight: '1.5',
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
+              whiteSpace: 'pre',
+            }}
+            PreTag="pre"
+            CodeTag="code"
+          >
+            {localCode}
+          </SyntaxHighlighter>
+        </div>
+
+        {/* Editable Textarea - only scrollable element with styled scrollbar */}
+        <div data-editor-id={editorId} className="absolute inset-0" style={{ left: '50px', right: 0 }}>
+          <textarea
+            ref={textareaRef}
+            value={localCode}
+            onChange={handleChange}
+            className="w-full h-full resize-none font-mono text-sm leading-relaxed p-4 border-0 outline-none"
+            style={{
+              color: 'transparent',
+              background: 'transparent',
+              caretColor: textColor,
+              tabSize: 2,
+              MozTabSize: 2,
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
+              overflow: 'auto',
+              overflowX: 'auto',
+              overflowY: 'auto',
+              whiteSpace: 'pre',
+              scrollbarWidth: 'thin', // Firefox
+              scrollbarColor: `${scrollbarThumbColor} ${scrollbarTrackColor}`, // Firefox
+              paddingLeft: '16px',
+            }}
+            spellCheck={false}
+            wrap="off"
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,9 +1,14 @@
 import type { Question } from './types';
 import Counter from './solutions/Counter';
 import TodoApp from './solutions/TodoApp';
+
 import DebouncedSearch from './solutions/DebouncedSearch';
+import Accordian from './solutions/Accordian';
+import StaleClosureExample from './solutions/StaleClouserExample';
+import ContactForm from './solutions/ContactForm';
 
 // Placeholder component for questions not yet implemented
+// eslint-disable-next-line react-refresh/only-export-components
 const Placeholder = () => (
   <div className="flex items-center justify-center min-h-[400px]">
     <div className="text-center">
@@ -42,12 +47,20 @@ export const questions: Question[] = [
     component: DebouncedSearch,
   },
   {
-    id: 'throttled-button',
-    title: 'Throttled button',
-    description: 'Create a button that throttles click events',
+    id: 'stale-closure',
+    title: 'Stale Closure Example',
+    description: 'Demonstrate the stale closure problem in React and how to fix it',
+    category: 'core',
+    difficulty: 'easy',
+    component: StaleClosureExample,
+  },
+  {
+    id: 'contact-form',
+    title: 'Contact Form',
+    description: 'Create a contact form with name, email, and message fields',
     category: 'core',
     difficulty: 'medium',
-    component: Placeholder,
+    component: ContactForm,
   },
   {
     id: 'modal',
@@ -71,7 +84,7 @@ export const questions: Question[] = [
     description: 'Build an accordion component with expand/collapse functionality',
     category: 'core',
     difficulty: 'easy',
-    component: Placeholder,
+    component: Accordian,
   },
   {
     id: 'pagination',

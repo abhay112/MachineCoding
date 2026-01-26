@@ -7,19 +7,20 @@ import { Preview } from '../components/editor/Preview';
 import { questions } from '../features/machineCoding/questions';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import type { Question } from '../features/machineCoding/types';
-import { solutionCode } from '../features/machineCoding/solutionCode';
+import { fetchComponentCode, preloadComponentCodes } from '../utils/fetchComponentCode';
 
 // Helper to get initial code for a question
-function getInitialCode(question: Question): string {
+async function getInitialCode(question: Question): Promise<string> {
   const stored = localStorage.getItem(`code_${question.id}`);
   if (stored) return stored;
   
-  // Use reference solution if available
-  if (solutionCode[question.id]) {
-    return solutionCode[question.id];
+  // Try to fetch from component file dynamically
+  const componentCode = await fetchComponentCode(question.id);
+  if (componentCode) {
+    return componentCode;
   }
   
-  // Default code template
+  // Default code template if component doesn't exist
   const componentName = question.id
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -35,18 +36,28 @@ export default function ${componentName}() {
       <p className="text-gray-600 dark:text-gray-400">${question.description}</p>
     </div>
   );
-}
-`;
+}`;
 }
 
 function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { activeQuestion, activeQuestionId, setActiveQuestionId } = useActiveQuestion(questions);
-  const [code, setCode] = useState(() => getInitialCode(activeQuestion));
+  const [code, setCode] = useState<string>('');
+  const [isLoadingCode, setIsLoadingCode] = useState(true);
 
+  // Preload all component codes on mount
   useEffect(() => {
-    setCode(getInitialCode(activeQuestion));
-  }, [activeQuestionId]);
+    preloadComponentCodes();
+  }, []);
+
+  // Load code when question changes
+  useEffect(() => {
+    setIsLoadingCode(true);
+    getInitialCode(activeQuestion).then((initialCode) => {
+      setCode(initialCode);
+      setIsLoadingCode(false);
+    });
+  }, [activeQuestionId, activeQuestion]);
 
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
@@ -85,11 +96,17 @@ function App() {
         />
         <SplitView
           left={
-            <CodeEditor
-              question={activeQuestion}
-              code={code}
-              onCodeChange={handleCodeChange}
-            />
+            isLoadingCode ? (
+              <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <p className="text-gray-500 dark:text-gray-400">Loading code...</p>
+              </div>
+            ) : (
+              <CodeEditor
+                question={activeQuestion}
+                code={code}
+                onCodeChange={handleCodeChange}
+              />
+            )
           }
           right={<Preview question={activeQuestion} />}
           leftTitle="Code Editor"
