@@ -23,6 +23,8 @@ export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
     setLocalCode(code);
   }, [code]);
 
+  //testing
+
   // Calculate line numbers
   const lines = localCode.split('\n');
   const lineCount = lines.length;
