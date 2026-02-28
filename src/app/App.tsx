@@ -13,19 +13,19 @@ import { fetchComponentCode, preloadComponentCodes } from '../utils/fetchCompone
 async function getInitialCode(question: Question): Promise<string> {
   const stored = localStorage.getItem(`code_${question.id}`);
   if (stored) return stored;
-  
+
   // Try to fetch from component file dynamically
   const componentCode = await fetchComponentCode(question.id);
   if (componentCode) {
     return componentCode;
   }
-  
+
   // Default code template if component doesn't exist
   const componentName = question.id
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
-  
+
   return `import { useState } from 'react';
 
 export default function ${componentName}() {
@@ -40,15 +40,30 @@ export default function ${componentName}() {
 }
 
 function App() {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const { activeQuestion, activeQuestionId, setActiveQuestionId } = useActiveQuestion(questions);
   const [code, setCode] = useState<string>('');
   const [isLoadingCode, setIsLoadingCode] = useState(true);
+
+  // Collapse sidebar on mobile by default
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setIsSidebarCollapsed(false);
+    }
+  }, []);
 
   // Preload all component codes on mount
   useEffect(() => {
     preloadComponentCodes();
   }, []);
+
+  // Set active question and collapse sidebar on mobile when question selected
+  const handleQuestionSelect = (id: string) => {
+    setActiveQuestionId(id);
+    if (window.innerWidth < 1024) {
+      setIsSidebarCollapsed(true);
+    }
+  };
 
   // Load code when question changes
   useEffect(() => {
@@ -85,12 +100,12 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <Header />
-      <div className="flex-1 flex overflow-hidden">
+      <Header onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)} />
+      <div className="flex-1 flex overflow-hidden relative">
         <Sidebar
           questions={questions}
           activeQuestionId={activeQuestionId}
-          onQuestionSelect={setActiveQuestionId}
+          onQuestionSelect={handleQuestionSelect}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         />
