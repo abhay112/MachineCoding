@@ -9,9 +9,9 @@ const specialCases: Record<string, string> = {
 const codeCache: Record<string, string> = {};
 
 // Lazy load all component files using Vite's import.meta.glob
-const componentModules = import.meta.glob('/src/features/machineCoding/solutions/*.tsx', { 
+const componentModules = import.meta.glob('/src/features/machineCoding/solutions/*.tsx', {
   as: 'raw',
-  eager: false 
+  eager: false
 });
 
 /**
@@ -56,7 +56,7 @@ function findComponentName(questionId: string): string | null {
   // This handles cases where the file might have a slightly different name
   const availableNames = getAvailableComponentNames();
   const lowerQuestionId = questionId.toLowerCase();
-  
+
   // Try to find a file that matches (case-insensitive, ignoring special chars)
   for (const name of availableNames) {
     const lowerName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -79,22 +79,46 @@ export async function fetchComponentCode(questionId: string): Promise<string> {
   }
 
   const componentName = findComponentName(questionId);
-  
+
   if (!componentName) {
-    // Return empty string if component doesn't exist
-    return '';
+    // Return a starter template if component doesn't exist
+    return `import React from 'react';
+
+/**
+ * Question: ${questionId}
+ * Difficulty: ${questionId}
+ * 
+ * Implement your solution below!
+ */
+export default function Solution() {
+  return (
+    <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+        Ready to solve ${questionId.replace(/-/g, ' ')}?
+      </h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6 font-medium">
+        The solution file hasn't been created yet. You can start building it right here in the editor!
+      </p>
+      <div className="flex justify-center gap-4">
+        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-semibold">
+          React + Tailwind CSS Enabled
+        </div>
+      </div>
+    </div>
+  );
+}`;
   }
 
   try {
     // Find the matching module path
     const modulePath = `/src/features/machineCoding/solutions/${componentName}.tsx`;
     const moduleLoader = componentModules[modulePath];
-    
+
     if (!moduleLoader) {
       console.warn(`Component file not found: ${modulePath}`);
       return '';
     }
-    
+
     const code = await moduleLoader();
     codeCache[questionId] = code as string;
     return code as string;
@@ -144,7 +168,7 @@ function pascalToKebabCase(pascal: string): string {
  */
 function getQuestionIdFromPath(path: string): string | null {
   const fileName = path.split('/').pop()?.replace('.tsx', '') || '';
-  
+
   // Check special cases (reverse lookup)
   const specialCaseEntries = Object.entries(specialCases);
   for (const [questionId, componentName] of specialCaseEntries) {
@@ -152,7 +176,7 @@ function getQuestionIdFromPath(path: string): string | null {
       return questionId;
     }
   }
-  
+
   // Try automatic conversion (PascalCase to kebab-case)
   const autoConverted = pascalToKebabCase(fileName);
   return autoConverted;

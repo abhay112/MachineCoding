@@ -8,6 +8,7 @@ import { Preview } from '../components/editor/Preview';
 import { questions } from '../features/machineCoding/questions';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import type { Question } from '../features/machineCoding/types';
+import { fetchComponentCode } from '../utils/fetchComponentCode';
 
 function App() {
   const navigate = useNavigate();
@@ -84,34 +85,9 @@ export default function InterviewSandbox() {
       const savedCode = localStorage.getItem(`code_${activeQuestionId}`);
       if (savedCode) {
         setCode(savedCode);
-      } else if (activeQuestion?.id === 'counter') {
-        setCode(`import { useState } from 'react';
-
-export default function Counter() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-      <h2 className="text-xl font-bold mb-4">Counter: {count}</h2>
-      <div className="flex gap-2">
-        <button 
-          onClick={() => setCount(prev => prev + 1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Increment
-        </button>
-        <button 
-          onClick={() => setCount(prev => prev - 1)}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          Decrement
-        </button>
-      </div>
-    </div>
-  );
-}`);
       } else {
-        setCode(`export default function Solution() {\n  return <div>Implement {activeQuestion?.title} here</div>\n}`);
+        const initialCode = await fetchComponentCode(activeQuestionId || '');
+        setCode(initialCode);
       }
       setIsLoadingCode(false);
     };
@@ -140,40 +116,12 @@ export default function Counter() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm('Are you sure you want to reset your code to the default solution? This cannot be undone.')) {
       if (mode === 'learning') {
         localStorage.removeItem(`code_${activeQuestionId}`);
-        // Trigger a reload of the default code
-        if (activeQuestion?.id === 'counter') {
-          setCode(`import { useState } from 'react';
-
-export default function Counter() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-      <h2 className="text-xl font-bold mb-4">Counter: {count}</h2>
-      <div className="flex gap-2">
-        <button 
-          onClick={() => setCount(prev => prev + 1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Increment
-        </button>
-        <button 
-          onClick={() => setCount(prev => prev - 1)}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          Decrement
-        </button>
-      </div>
-    </div>
-  );
-}`);
-        } else {
-          setCode(`export default function Solution() {\n  return <div>Implement {activeQuestion?.title} here</div>\n}`);
-        }
+        const initialCode = await fetchComponentCode(activeQuestionId || '');
+        setCode(initialCode);
       } else {
         localStorage.removeItem('sandbox_code');
         setSandboxCode(`import { useState } from 'react';

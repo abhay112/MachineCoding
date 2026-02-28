@@ -1,24 +1,4 @@
 import type { Question } from './types';
-import Counter from './solutions/Counter';
-import TodoApp from './solutions/TodoApp';
-import DebouncedSearch from './solutions/DebouncedSearch';
-import Accordian from './solutions/Accordian';
-import StaleClosureExample from './solutions/StaleClouserExample';
-import ContactForm from './solutions/ContactForm';
-import InfiniteScroll from './solutions/InfiniteScroll';
-
-// Placeholder component for questions not yet implemented
-// eslint-disable-next-line react-refresh/only-export-components
-const Placeholder = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
-    <div className="text-center">
-      <p className="text-gray-500 dark:text-gray-400 mb-2">Solution coming soon...</p>
-      <p className="text-sm text-gray-400 dark:text-gray-500">
-        Implement this component in features/machineCoding/solutions/
-      </p>
-    </div>
-  </div>
-);
 
 export const questions: Question[] = [
   // Core React (Most Asked)
@@ -29,7 +9,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'easy',
-    component: Counter,
   },
   {
     id: 'todo-app',
@@ -38,7 +17,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'medium',
-    component: TodoApp,
   },
   {
     id: 'debounced-search',
@@ -47,7 +25,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'medium',
-    component: DebouncedSearch,
   },
   {
     id: 'stale-closure',
@@ -56,7 +33,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'easy',
-    component: StaleClosureExample,
   },
   {
     id: 'contact-form',
@@ -65,7 +41,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'medium',
-    component: ContactForm,
   },
   {
     id: 'modal',
@@ -74,7 +49,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'tabs',
@@ -83,7 +57,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'accordion',
@@ -92,7 +65,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'easy',
-    component: Accordian,
   },
   {
     id: 'pagination',
@@ -101,7 +73,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'infinite-scroll',
@@ -110,7 +81,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'hard',
-    component: InfiniteScroll,
   },
   {
     id: 'dropdown-keyboard',
@@ -119,7 +89,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'core',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // State & Hooks
@@ -130,7 +99,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'state',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'use-throttle',
@@ -139,7 +107,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'state',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'use-previous',
@@ -148,7 +115,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'state',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'use-outside-click',
@@ -157,7 +123,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'state',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'custom-form-validation',
@@ -166,7 +131,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'state',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // Performance
@@ -177,7 +141,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'performance',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'memoized-list',
@@ -186,7 +149,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'performance',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'optimized-search-filter',
@@ -195,7 +157,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'performance',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'image-lazy-loading',
@@ -204,7 +165,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'performance',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'window-resize-optimization',
@@ -213,7 +173,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'performance',
     difficulty: 'medium',
-    component: Placeholder,
   },
 
   // UI / UX
@@ -224,7 +183,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'ui',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'theme-switcher',
@@ -233,7 +191,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'ui',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'skeleton-loader',
@@ -242,7 +199,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'ui',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'stepper',
@@ -251,7 +207,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'ui',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'carousel',
@@ -260,7 +215,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'ui',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // Data Handling
@@ -271,7 +225,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'data',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'table-filtering',
@@ -280,7 +233,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'data',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'table-pagination',
@@ -289,7 +241,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'data',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'searchable-dropdown',
@@ -298,7 +249,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'data',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'multi-select-dropdown',
@@ -307,7 +257,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'data',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // Advanced
@@ -318,7 +267,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'advanced',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'drag-drop-list',
@@ -327,7 +275,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'advanced',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'kanban-board',
@@ -336,7 +283,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'advanced',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'chat-ui',
@@ -345,7 +291,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'advanced',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'autocomplete',
@@ -354,7 +299,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'advanced',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // Real-world
@@ -365,7 +309,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'real-world',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'countdown-timer',
@@ -374,7 +317,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'real-world',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'rating',
@@ -383,7 +325,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'real-world',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'breadcrumb',
@@ -392,7 +333,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'real-world',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'password-strength',
@@ -401,7 +341,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'real-world',
     difficulty: 'medium',
-    component: Placeholder,
   },
 
   // Architecture-level
@@ -412,7 +351,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'architecture',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'role-based-ui',
@@ -421,7 +359,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'architecture',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'error-boundary',
@@ -430,7 +367,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'architecture',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'retry-api',
@@ -439,7 +375,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'architecture',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'event-bus',
@@ -448,7 +383,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'architecture',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // Bonus (Standout)
@@ -459,7 +393,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'bonus',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'json-viewer',
@@ -468,7 +401,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'bonus',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'code-editor-wrapper',
@@ -477,7 +409,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'bonus',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'notification-center',
@@ -486,7 +417,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'bonus',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'dashboard-layout',
@@ -495,7 +425,6 @@ export const questions: Question[] = [
     type: 'react',
     category: 'bonus',
     difficulty: 'hard',
-    component: Placeholder,
   },
 
   // JavaScript Questions
@@ -506,7 +435,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'utility',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'throttle-js',
@@ -515,7 +443,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'utility',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'array-map-polyfill',
@@ -524,7 +451,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'polyfill',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'curry-implementation',
@@ -533,7 +459,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'utility',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'deep-clone',
@@ -542,7 +467,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'utility',
     difficulty: 'medium',
-    component: Placeholder,
   },
   {
     id: 'promise-all-polyfill',
@@ -551,7 +475,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'polyfill',
     difficulty: 'hard',
-    component: Placeholder,
   },
   {
     id: 'flatten-array',
@@ -560,7 +483,6 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'algorithm',
     difficulty: 'easy',
-    component: Placeholder,
   },
   {
     id: 'memoize-utility',
@@ -569,6 +491,5 @@ export const questions: Question[] = [
     type: 'javascript',
     category: 'utility',
     difficulty: 'medium',
-    component: Placeholder,
   }
 ];
