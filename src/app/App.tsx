@@ -41,6 +41,8 @@ export default function ${componentName}() {
 
 function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isEditorVisible, setIsEditorVisible] = useState(true);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const { activeQuestion, activeQuestionId, setActiveQuestionId } = useActiveQuestion(questions);
   const [code, setCode] = useState<string>('');
   const [isLoadingCode, setIsLoadingCode] = useState(true);
@@ -100,7 +102,19 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <Header onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)} />
+      <Header
+        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
+        isEditorVisible={isEditorVisible}
+        isPreviewVisible={isPreviewVisible}
+        onToggleEditor={() => {
+          if (!isPreviewVisible && isEditorVisible) setIsPreviewVisible(true);
+          setIsEditorVisible((prev) => !prev);
+        }}
+        onTogglePreview={() => {
+          if (!isEditorVisible && isPreviewVisible) setIsEditorVisible(true);
+          setIsPreviewVisible((prev) => !prev);
+        }}
+      />
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar
           questions={questions}
@@ -110,20 +124,18 @@ function App() {
           onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         />
         <SplitView
+          isLeftVisible={isEditorVisible}
+          isRightVisible={isPreviewVisible}
           left={
             isLoadingCode ? (
               <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <p className="text-gray-500 dark:text-gray-400">Loading code...</p>
               </div>
             ) : (
-              <CodeEditor
-                question={activeQuestion}
-                code={code}
-                onCodeChange={handleCodeChange}
-              />
+              <CodeEditor question={activeQuestion} code={code} onCodeChange={handleCodeChange} />
             )
           }
-          right={<Preview question={activeQuestion} />}
+          right={<Preview question={activeQuestion} code={code} />}
           leftTitle="Code Editor"
           rightTitle="Live Preview"
         />

@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useEffect, useState } from 'react';
+import Editor from '@monaco-editor/react';
 
 import type { Question } from '../../features/machineCoding/types';
 import { Button } from '../ui/Button';
@@ -15,153 +14,21 @@ interface CodeEditorProps {
 export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
   const { theme } = useThemeContext();
   const [localCode, setLocalCode] = useState(code);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
-  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLocalCode(code);
   }, [code]);
 
-  //testing
-
-  // Calculate line numbers
-  const lines = localCode.split('\n');
-  const lineCount = lines.length;
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const next = e.target.value;
-    setLocalCode(next);
-    onCodeChange(next);
-  };
-
   const handleFormat = () => {
-    // Simple formatting - indent with 2 spaces
-    const formatted = localCode
-      .split('\n')
-      .map((line) => {
-        // Basic indentation preservation
-        const trimmed = line.trim();
-        if (!trimmed) return '';
-        return line;
-      })
-      .join('\n');
-    
-    setLocalCode(formatted);
-    onCodeChange(formatted);
+    // Monaco has built-in formatting, but for now we reset to the original provided code
+    // Or we could trigger an action on the editor instance if we had a ref
+    setLocalCode(code);
+    onCodeChange(code);
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(localCode);
   };
-
-  const highlighterStyle = theme === 'dark' ? vscDarkPlus : vs;
-  const bgColor = theme === 'dark' ? '#1E1E1E' : '#FFFFFF';
-  const textColor = theme === 'dark' ? '#D4D4D4' : '#000000';
-  const lineNumberColor = theme === 'dark' ? '#858585' : '#237893';
-  const lineNumberBg = theme === 'dark' ? '#252526' : '#F8F8F8';
-  
-  // Scrollbar colors based on theme
-  const scrollbarTrackColor = theme === 'dark' ? '#1E1E1E' : '#F5F5F5';
-  const scrollbarThumbColor = theme === 'dark' ? '#424242' : '#CCCCCC';
-  const scrollbarThumbHoverColor = theme === 'dark' ? '#4E4E4E' : '#B3B3B3';
-
-  // Generate unique ID for this editor instance to scope styles
-  const editorId = `code-editor-${question.id}`;
-
-  // Inject scrollbar styles into document head for better reliability
-  useEffect(() => {
-    const styleId = `editor-scrollbar-${editorId}`;
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-    
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = styleId;
-      document.head.appendChild(styleElement);
-    }
-    
-    styleElement.textContent = `
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar {
-        width: 12px;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-track {
-        background: ${scrollbarTrackColor} !important;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb {
-        background: ${scrollbarThumbColor} !important;
-        border-radius: 6px;
-        border: 2px solid ${scrollbarTrackColor} !important;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb:hover {
-        background: ${scrollbarThumbHoverColor} !important;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar:horizontal {
-        height: 12px;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-track:horizontal {
-        background: ${scrollbarTrackColor} !important;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb:horizontal {
-        background: ${scrollbarThumbColor} !important;
-        border-radius: 6px;
-        border: 2px solid ${scrollbarTrackColor} !important;
-      }
-      [data-editor-id="${editorId}"] textarea::-webkit-scrollbar-thumb:horizontal:hover {
-        background: ${scrollbarThumbHoverColor} !important;
-      }
-      .highlight-overlay::-webkit-scrollbar {
-        display: none !important;
-      }
-      .highlight-overlay {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-      }
-      .line-numbers::-webkit-scrollbar {
-        display: none !important;
-      }
-      .line-numbers {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-      }
-      .highlight-overlay pre {
-        white-space: pre !important;
-        word-wrap: normal !important;
-        overflow-wrap: normal !important;
-        overflow: visible !important;
-        margin: 0 !important;
-      }
-      .highlight-overlay code {
-        white-space: pre !important;
-        word-wrap: normal !important;
-        overflow-wrap: normal !important;
-      }
-    `;
-    
-    return () => {
-      const element = document.getElementById(styleId);
-      if (element) {
-        element.remove();
-      }
-    };
-  }, [editorId, scrollbarTrackColor, scrollbarThumbColor, scrollbarThumbHoverColor]);
-
-  // Sync scroll: only textarea scrolls, highlight and line numbers follow
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    const highlight = highlightRef.current;
-    const lineNumbers = lineNumbersRef.current;
-    
-    if (textarea && highlight && lineNumbers) {
-      const handleScroll = () => {
-        highlight.scrollTop = textarea.scrollTop;
-        highlight.scrollLeft = textarea.scrollLeft;
-        lineNumbers.scrollTop = textarea.scrollTop;
-      };
-      
-      textarea.addEventListener('scroll', handleScroll);
-      return () => textarea.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
 
   return (
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -177,8 +44,8 @@ export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
         </div>
 
         <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={handleFormat}>
-            Format
+          <Button size="sm" variant="ghost" onClick={handleFormat} title="Reset to initial code">
+            Reset
           </Button>
           <Button size="sm" variant="ghost" onClick={handleCopy}>
             Copy
@@ -186,100 +53,65 @@ export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="flex-1 relative overflow-hidden" style={{ background: bgColor }}>
+      {/* Monaco Editor Container */}
+      <div className="flex-1 relative overflow-hidden">
+        <Editor
+          height="100%"
+          path="index.tsx"
+          defaultLanguage="typescript"
+          beforeMount={(monaco) => {
+            monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+              jsx: monaco.languages.typescript.JsxEmit.React,
+              target: monaco.languages.typescript.ScriptTarget.ESNext,
+              module: monaco.languages.typescript.ModuleKind.ESNext,
+              allowNonTsExtensions: true,
+              esModuleInterop: true,
+              allowJs: true,
+              lib: ['esnext', 'dom'],
+            });
 
-        {/* Line Numbers */}
-        <div
-          ref={lineNumbersRef}
-          className="absolute left-0 top-0 bottom-0 line-numbers pointer-events-none overflow-hidden"
-          style={{
-            width: '50px',
-            paddingTop: '16px',
-            paddingBottom: '16px',
-            background: lineNumberBg,
-            borderRight: `1px solid ${theme === 'dark' ? '#3E3E42' : '#E8E8E8'}`,
+            // Add basic JSX types to suppress "Cannot find name 'div'" errors
+            monaco.languages.typescript.typescriptDefaults.addExtraLib(`
+              declare namespace JSX {
+                interface IntrinsicElements {
+                  [elemName: string]: any;
+                }
+              }
+              declare module 'react' {
+                export const useState: any;
+                export const useEffect: any;
+                export default React;
+              }
+            `, 'react-shim.d.ts');
+          }}
+          theme={theme === 'dark' ? 'vs-dark' : 'light'}
+          value={localCode}
+          onChange={(value) => {
+            const next = value || '';
+            setLocalCode(next);
+            onCodeChange(next);
+          }}
+          options={{
+            minimap: { enabled: false },
+            fontSize: 14,
+            lineNumbers: 'on',
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            tabSize: 2,
+            wordWrap: 'on',
+            padding: { top: 16, bottom: 16 },
             fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            textAlign: 'right',
-            paddingRight: '12px',
-            paddingLeft: '8px',
-            color: lineNumberColor,
-            userSelect: 'none',
+            suggestOnTriggerCharacters: true,
+            quickSuggestions: true,
+            scrollbar: {
+              vertical: 'visible',
+              horizontal: 'visible',
+              useShadows: false,
+              verticalScrollbarSize: 10,
+              horizontalScrollbarSize: 10,
+            },
           }}
-        >
-          {Array.from({ length: lineCount }, (_, i) => (
-            <div
-              key={i + 1}
-              style={{
-                minHeight: '21px', // 14px * 1.5 line-height
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-              }}
-            >
-              {i + 1}
-            </div>
-          ))}
-        </div>
-
-        {/* Syntax Highlighter Overlay - not scrollable, synced with textarea */}
-        <div 
-          className="absolute inset-0 pointer-events-none highlight-overlay" 
-          ref={highlightRef}
-          style={{ 
-            overflow: 'hidden',
-            left: '50px', // Account for line numbers
-            right: 0,
-          }}
-        >
-          <SyntaxHighlighter
-            language="tsx"
-            style={highlighterStyle}
-            customStyle={{
-              margin: 0,
-              padding: '16px',
-              paddingLeft: '16px',
-              background: 'transparent',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
-              whiteSpace: 'pre',
-            }}
-            PreTag="pre"
-            CodeTag="code"
-          >
-            {localCode}
-          </SyntaxHighlighter>
-        </div>
-
-        {/* Editable Textarea - only scrollable element with styled scrollbar */}
-        <div data-editor-id={editorId} className="absolute inset-0" style={{ left: '50px', right: 0 }}>
-          <textarea
-            ref={textareaRef}
-            value={localCode}
-            onChange={handleChange}
-            className="w-full h-full resize-none font-mono text-sm leading-relaxed p-4 border-0 outline-none"
-            style={{
-              color: 'transparent',
-              background: 'transparent',
-              caretColor: textColor,
-              tabSize: 2,
-              MozTabSize: 2,
-              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
-              overflow: 'auto',
-              overflowX: 'auto',
-              overflowY: 'auto',
-              whiteSpace: 'pre',
-              scrollbarWidth: 'thin', // Firefox
-              scrollbarColor: `${scrollbarThumbColor} ${scrollbarTrackColor}`, // Firefox
-              paddingLeft: '16px',
-            }}
-            spellCheck={false}
-            wrap="off"
-          />
-        </div>
+        />
       </div>
     </div>
   );

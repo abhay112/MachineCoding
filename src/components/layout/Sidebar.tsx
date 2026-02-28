@@ -40,7 +40,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 lg:relative lg:inset-auto lg:z-0 transition-opacity duration-300',
+        'fixed inset-0 z-50 lg:relative lg:inset-auto lg:z-0 transition-all duration-300 lg:h-full',
         isCollapsed ? 'opacity-0 pointer-events-none lg:w-0' : 'opacity-100 lg:w-80'
       )}
     >
@@ -53,11 +53,11 @@ export function Sidebar({
       )}
       <aside
         className={cn(
-          'absolute inset-y-0 left-0 lg:relative border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 transition-all duration-300 flex flex-col z-50',
+          'absolute inset-y-0 left-0 lg:relative h-full border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 transition-all duration-300 flex flex-col z-50',
           isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-0 overflow-hidden' : 'translate-x-0 w-[280px] sm:w-80'
         )}
       >
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800 space-y-3">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Questions ({filteredQuestions.length}/{questions.length})
@@ -149,7 +149,7 @@ export function Sidebar({
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-thin">
           <nav className="p-2">
             {filteredQuestions.map((question) => {
               const isActive = question.id === activeQuestionId;
