@@ -179,31 +179,31 @@ export function Sidebar({
           </div>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-thin">
-          <nav className="p-2">
+          <nav className="p-2 space-y-1">
             {filteredQuestions.map((question) => {
               const isActive = question.id === activeQuestionId;
               return (
-                <Tooltip key={question.id} content={question.description}>
+                <Tooltip key={question.id} content={question.description} className="block w-full">
                   <button
                     onClick={() => onQuestionSelect(question.id)}
                     className={cn(
-                      'w-full text-left px-3 py-2.5 mb-1 rounded-lg transition-all duration-200',
-                      'hover:bg-gray-100 dark:hover:bg-gray-700',
+                      'w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 group',
+                      'hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98]',
                       isActive
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800'
-                        : 'text-gray-700 dark:text-gray-300'
+                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200 dark:border-blue-800'
+                        : 'text-gray-700 dark:text-gray-300 border border-transparent'
                     )}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-3">
                       <span className="text-sm line-clamp-2 flex-1">{question.title}</span>
                       <span
                         className={cn(
-                          'text-xs px-1.5 py-0.5 rounded shrink-0',
+                          'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0',
                           question.difficulty === 'easy'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800'
                             : question.difficulty === 'medium'
-                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
                         )}
                       >
                         {question.difficulty}
@@ -213,6 +213,17 @@ export function Sidebar({
                 </Tooltip>
               );
             })}
+            {filteredQuestions.length === 0 && (
+              <div className="p-8 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">No questions found matching your filters.</p>
+                <button
+                  onClick={clearFilters}
+                  className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       </aside>

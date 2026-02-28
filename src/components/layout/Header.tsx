@@ -13,6 +13,8 @@ interface HeaderProps {
   onTogglePreview: () => void;
   mode: 'learning' | 'sandbox';
   onSetMode: (mode: 'learning' | 'sandbox') => void;
+  onReset?: () => void;
+  onCopy?: () => void;
 }
 
 export function Header({
@@ -22,7 +24,9 @@ export function Header({
   onToggleEditor,
   onTogglePreview,
   mode,
-  onSetMode
+  onSetMode,
+  onReset,
+  onCopy
 }: HeaderProps) {
   const { theme, toggleTheme } = useThemeContext();
 
@@ -103,6 +107,19 @@ export function Header({
           </svg>
           <span className="hidden md:inline">Preview</span>
         </button>
+      </div>
+
+      <div className="flex items-center gap-1 sm:gap-2 mr-4 ml-2">
+        {onReset && (
+          <Button variant="ghost" size="sm" onClick={onReset} title="Reset to initial solution">
+            Reset
+          </Button>
+        )}
+        {onCopy && (
+          <Button variant="ghost" size="sm" onClick={onCopy} title="Copy code">
+            Copy
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">

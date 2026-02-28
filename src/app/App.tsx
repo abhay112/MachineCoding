@@ -14,7 +14,7 @@ function App() {
   const location = useLocation();
   const mode = location.pathname === '/sandbox' ? 'sandbox' : 'learning';
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isEditorVisible, setIsEditorVisible] = useState(true);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
 
@@ -140,6 +140,79 @@ export default function Counter() {
     }
   };
 
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset your code to the default solution? This cannot be undone.')) {
+      if (mode === 'learning') {
+        localStorage.removeItem(`code_${activeQuestionId}`);
+        // Trigger a reload of the default code
+        if (activeQuestion?.id === 'counter') {
+          setCode(`import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <h2 className="text-xl font-bold mb-4">Counter: {count}</h2>
+      <div className="flex gap-2">
+        <button 
+          onClick={() => setCount(prev => prev + 1)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Increment
+        </button>
+        <button 
+          onClick={() => setCount(prev => prev - 1)}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          Decrement
+        </button>
+      </div>
+    </div>
+  );
+}`);
+        } else {
+          setCode(`export default function Solution() {\n  return <div>Implement {activeQuestion?.title} here</div>\n}`);
+        }
+      } else {
+        localStorage.removeItem('sandbox_code');
+        setSandboxCode(`import { useState } from 'react';
+
+export default function InterviewSandbox() {
+  const [message, setMessage] = useState('Hello Interviewer!');
+  
+  console.log("Sandbox initialized");
+
+  return (
+    <div className="p-8 max-w-md mx-auto bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        {message}
+      </h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">
+        This is your private sandbox for live interviews. Run any React code from scratch!
+      </p>
+      <button 
+        onClick={() => {
+          const next = "Let's Build Something Great!";
+          setMessage(next);
+          console.log("Message updated to:", next);
+        }}
+        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95"
+      >
+        Update Message
+      </button>
+    </div>
+  );
+}`);
+      }
+    }
+  };
+
+  const handleCopy = () => {
+    const codeToCopy = mode === 'learning' ? code : sandboxCode;
+    navigator.clipboard.writeText(codeToCopy);
+  };
+
   const handleSetMode = (newMode: 'learning' | 'sandbox') => {
     navigate(newMode === 'sandbox' ? '/sandbox' : '/');
   };
@@ -181,6 +254,8 @@ export default function Counter() {
         }}
         mode={mode}
         onSetMode={handleSetMode}
+        onReset={handleReset}
+        onCopy={handleCopy}
       />
       <div className="flex-1 flex overflow-hidden relative">
         <Routes>
@@ -202,7 +277,12 @@ export default function Counter() {
                       <p className="text-gray-500 dark:text-gray-400">Loading code...</p>
                     </div>
                   ) : (
-                    <CodeEditor question={activeQuestion} code={code} onCodeChange={handleCodeChange} />
+                    <CodeEditor
+                      question={activeQuestion}
+                      code={code}
+                      onCodeChange={handleCodeChange}
+                      onReset={handleReset}
+                    />
                   )
                 }
                 right={<Preview question={activeQuestion} code={code} />}
@@ -216,7 +296,12 @@ export default function Counter() {
               isLeftVisible={isEditorVisible}
               isRightVisible={isPreviewVisible}
               left={
-                <CodeEditor question={sandboxQuestion} code={sandboxCode} onCodeChange={handleSandboxCodeChange} />
+                <CodeEditor
+                  question={sandboxQuestion}
+                  code={sandboxCode}
+                  onCodeChange={handleSandboxCodeChange}
+                  onReset={handleReset}
+                />
               }
               right={<Preview question={sandboxQuestion} code={sandboxCode} showConsoleAlways={true} />}
               leftTitle="Interview Editor"

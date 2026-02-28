@@ -9,22 +9,16 @@ interface CodeEditorProps {
   question: Question;
   code: string;
   onCodeChange: (code: string) => void;
+  onReset: () => void;
 }
 
-export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
+export function CodeEditor({ question, code, onCodeChange, onReset }: CodeEditorProps) {
   const { theme } = useThemeContext();
   const [localCode, setLocalCode] = useState(code);
 
   useEffect(() => {
     setLocalCode(code);
   }, [code]);
-
-  const handleFormat = () => {
-    // Monaco has built-in formatting, but for now we reset to the original provided code
-    // Or we could trigger an action on the editor instance if we had a ref
-    setLocalCode(code);
-    onCodeChange(code);
-  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(localCode);
@@ -44,7 +38,7 @@ export function CodeEditor({ question, code, onCodeChange }: CodeEditorProps) {
         </div>
 
         <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={handleFormat} title="Reset to initial code">
+          <Button size="sm" variant="ghost" onClick={onReset} title="Reset to initial code">
             Reset
           </Button>
           <Button size="sm" variant="ghost" onClick={handleCopy}>
