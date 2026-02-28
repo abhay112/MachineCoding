@@ -7,11 +7,12 @@ import type { Question } from '../../features/machineCoding/types';
 interface PreviewProps {
   question: Question;
   code: string;
+  showConsoleAlways?: boolean;
 }
 
 function ErrorFallback({ error }: FallbackProps) {
   return (
-    <div className="h-full flex items-center justify-center p-8 text-center">
+    <div className="h-full flex items-center justify-center p-8 text-center border-t border-red-100 dark:border-red-900/30">
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md shadow-lg">
         <h3 className="text-red-800 dark:text-red-300 font-bold mb-3 flex items-center justify-center gap-2 text-lg">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,44 +28,90 @@ function ErrorFallback({ error }: FallbackProps) {
   );
 }
 
-export function Preview({ code }: PreviewProps) {
+export function Preview({ code, showConsoleAlways = false }: PreviewProps) {
   const [LiveComponent, setLiveComponent] = useState<React.ComponentType | null>(null);
+  const [ConsoleComponent, setConsoleComponent] = useState<React.ComponentType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      // Transpile code
-      const transformed = transform(code, {
-        transforms: ['typescript', 'jsx', 'imports'],
-      }).code;
+    const timeout = setTimeout(() => {
+      try {
+        // Transpile code
+        const transformed = transform(code, {
+          transforms: ['typescript', 'jsx', 'imports'],
+        }).code;
 
-      // Create a function that executes the code and returns the default export
-      // We mock a simple require system for React
-      const runtimeRequire = (moduleName: string) => {
-        if (moduleName === 'react') return React;
-        throw new Error(`Module ${moduleName} not found in preview environment`);
-      };
+        // Mock a simple require system for React and console for logging
+        const runtimeRequire = (moduleName: string) => {
+          if (moduleName === 'react') return React;
+          throw new Error(`Module ${moduleName} not found in preview environment`);
+        };
 
-      const exports: { default?: any } = {};
-      const module = { exports };
+        const logs: any[] = [];
+        const mockConsole = {
+          log: (...args: any[]) => {
+            console.log(...args); // Keep in dev tools
+            logs.push(args.map(arg =>
+              typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' '));
+          },
+          error: (...args: any[]) => {
+            console.error(...args);
+            logs.push(`Error: ${args.join(' ')}`);
+          },
+          warn: (...args: any[]) => {
+            console.warn(...args);
+            logs.push(`Warning: ${args.join(' ')}`);
+          }
+        };
 
-      // Simplified eval-like execution
-      const executeCode = new Function('require', 'React', 'exports', 'module', transformed);
-      executeCode(runtimeRequire, React, exports, module);
+        const exports: { default?: any } = {};
+        const module = { exports };
 
-      const Component = exports.default || module.exports;
+        // Simplified eval-like execution
+        const executeCode = new Function('require', 'React', 'exports', 'module', 'console', transformed);
+        executeCode(runtimeRequire, React, exports, module, mockConsole);
 
-      if (typeof Component !== 'function') {
-        throw new Error('No default export found. Please "export default function Component() { ... }"');
+        const Component = exports.default || module.exports;
+
+        const LogView = () => (
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mt-4">Console Logs</h4>
+            <div className="bg-gray-950 border border-gray-800 rounded-2xl p-6 font-mono text-sm overflow-auto shadow-2xl max-h-[400px] scrollbar-thin">
+              {logs.length === 0 ? (
+                <div className="text-gray-600 italic">No console logs yet...</div>
+              ) : (
+                logs.map((log, i) => (
+                  <div key={i} className="text-green-400 mb-2 last:mb-0 border-b border-gray-800/50 pb-2 last:border-0">
+                    <span className="text-gray-700 mr-3 text-[10px]">[{i + 1}]</span>
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        );
+
+        if (typeof Component === 'function') {
+          setLiveComponent(() => Component);
+          setConsoleComponent(() => LogView);
+        } else if (logs.length > 0) {
+          setLiveComponent(() => LogView);
+          setConsoleComponent(null);
+        } else {
+          throw new Error('No default export found and no logs were produced.');
+        }
+
+        setError(null);
+      } catch (err: any) {
+        console.error('Preview error:', err);
+        setError(err.message);
+        setLiveComponent(null);
+        setConsoleComponent(null);
       }
+    }, 500); // 500ms debounce
 
-      setLiveComponent(() => Component);
-      setError(null);
-    } catch (err: any) {
-      console.error('Preview error:', err);
-      setError(err.message);
-      setLiveComponent(null);
-    }
+    return () => clearTimeout(timeout);
   }, [code]);
 
   if (error) {
@@ -84,17 +131,25 @@ export function Preview({ code }: PreviewProps) {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-900 overflow-auto">
+    <div className="h-full bg-white dark:bg-gray-900 overflow-auto scrollbar-thin">
       <ErrorBoundary fallbackRender={ErrorFallback} resetKeys={[code]}>
-        <div className="p-8 min-h-full">
-          {LiveComponent ? (
-            <div className="animate-in fade-in duration-500">
-              <LiveComponent />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-400">
-              <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-              <p className="text-sm font-medium">Updating preview...</p>
+        <div className="p-8 min-h-full flex flex-col gap-10">
+          <div className="flex-1 min-h-[200px]">
+            {LiveComponent ? (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-1000">
+                <LiveComponent />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-400">
+                <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+                <p className="text-sm font-medium">Ready for interview...</p>
+              </div>
+            )}
+          </div>
+
+          {(showConsoleAlways && ConsoleComponent) && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <ConsoleComponent />
             </div>
           )}
         </div>

@@ -25,17 +25,33 @@ export function Sidebar({
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | 'all'>('all');
 
+  const categories: Category[] = [
+    'core', 'state', 'performance', 'ui', 'data', 'advanced', 'real-world',
+    'architecture', 'bonus', 'polyfill', 'utility', 'algorithm'
+  ];
+  const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
+  const platforms: ('react' | 'javascript' | 'all')[] = ['all', 'react', 'javascript'];
+
+  const [selectedPlatform, setSelectedPlatform] = useState<'react' | 'javascript' | 'all'>('all');
+
   const filteredQuestions = questions.filter((q) => {
     const matchesSearch =
       q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || q.category === selectedCategory;
     const matchesDifficulty = selectedDifficulty === 'all' || q.difficulty === selectedDifficulty;
-    return matchesSearch && matchesCategory && matchesDifficulty;
+    const matchesPlatform = selectedPlatform === 'all' || q.type === selectedPlatform;
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesPlatform;
   });
 
-  const categories: Category[] = ['core', 'state', 'performance', 'ui', 'data', 'advanced', 'real-world', 'architecture', 'bonus'];
-  const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSelectedDifficulty('all');
+    setSelectedPlatform('all');
+  };
+
+  const isFilterActive = searchQuery !== '' || selectedCategory !== 'all' || selectedDifficulty !== 'all' || selectedPlatform !== 'all';
 
   return (
     <div
@@ -59,9 +75,19 @@ export function Sidebar({
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Questions ({filteredQuestions.length}/{questions.length})
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Questions ({filteredQuestions.length})
+              </h2>
+              {isFilterActive && (
+                <button
+                  onClick={clearFilters}
+                  className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
             <button
               onClick={onToggleCollapse}
               className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -82,6 +108,7 @@ export function Sidebar({
               </svg>
             </button>
           </div>
+
           <input
             type="text"
             placeholder="Search questions..."
@@ -89,62 +116,64 @@ export function Sidebar({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+
           <div className="space-y-2">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Category
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
+                Platform
               </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value as Category | 'all')}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Difficulty
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSelectedDifficulty('all')}
-                  className={cn(
-                    'flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                    selectedDifficulty === 'all'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  )}
-                >
-                  All
-                </button>
-                {difficulties.map((difficulty) => (
+              <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                {platforms.map((platform) => (
                   <button
-                    key={difficulty}
-                    onClick={() => setSelectedDifficulty(difficulty)}
+                    key={platform}
+                    onClick={() => setSelectedPlatform(platform)}
                     className={cn(
-                      'flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                      selectedDifficulty === difficulty
-                        ? difficulty === 'easy'
-                          ? 'bg-green-500 text-white'
-                          : difficulty === 'medium'
-                            ? 'bg-yellow-500 text-white'
-                            : 'bg-red-500 text-white'
-                        : difficulty === 'easy'
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
-                          : difficulty === 'medium'
-                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50'
-                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
+                      'flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all uppercase',
+                      selectedPlatform === platform
+                        ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
                     )}
                   >
-                    {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                    {platform}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Category
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value as Category | 'all')}
+                  className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Level
+                </label>
+                <select
+                  value={selectedDifficulty}
+                  onChange={(e) => setSelectedDifficulty(e.target.value as Difficulty | 'all')}
+                  className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All</option>
+                  {difficulties.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

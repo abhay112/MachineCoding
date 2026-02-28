@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Sidebar } from '../components/layout/Sidebar';
 import { SplitView } from '../components/layout/SplitView';
@@ -7,59 +8,131 @@ import { Preview } from '../components/editor/Preview';
 import { questions } from '../features/machineCoding/questions';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import type { Question } from '../features/machineCoding/types';
-import { fetchComponentCode, preloadComponentCodes } from '../utils/fetchComponentCode';
-
-// Helper to get initial code for a question
-async function getInitialCode(question: Question): Promise<string> {
-  const stored = localStorage.getItem(`code_${question.id}`);
-  if (stored) return stored;
-
-  // Try to fetch from component file dynamically
-  const componentCode = await fetchComponentCode(question.id);
-  if (componentCode) {
-    return componentCode;
-  }
-
-  // Default code template if component doesn't exist
-  const componentName = question.id
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('');
-
-  return `import { useState } from 'react';
-
-export default function ${componentName}() {
-  // Your solution here
-  return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">${question.title}</h2>
-      <p className="text-gray-600 dark:text-gray-400">${question.description}</p>
-    </div>
-  );
-}`;
-}
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const mode = location.pathname === '/sandbox' ? 'sandbox' : 'learning';
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isEditorVisible, setIsEditorVisible] = useState(true);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+
   const { activeQuestion, activeQuestionId, setActiveQuestionId } = useActiveQuestion(questions);
   const [code, setCode] = useState<string>('');
+
+  const [sandboxCode, setSandboxCode] = useState<string>(() => {
+    return localStorage.getItem('sandbox_code') ||
+      `import { useState } from 'react';
+
+export default function InterviewSandbox() {
+  const [message, setMessage] = useState('Hello Interviewer!');
+  
+  console.log("Sandbox initialized");
+
+  return (
+    <div className="p-8 max-w-md mx-auto bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        {message}
+      </h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">
+        This is your private sandbox for live interviews. Run any React code from scratch!
+      </p>
+      <button 
+        onClick={() => {
+          const next = "Let's Build Something Great!";
+          setMessage(next);
+          console.log("Message updated to:", next);
+        }}
+        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95"
+      >
+        Update Message
+      </button>
+    </div>
+  );
+}`;
+  });
+
   const [isLoadingCode, setIsLoadingCode] = useState(true);
 
   // Collapse sidebar on mobile by default
   useEffect(() => {
-    if (window.innerWidth >= 1024) {
-      setIsSidebarCollapsed(false);
-    }
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarCollapsed(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Preload all component codes on mount
+  // Update URL search param for active question
   useEffect(() => {
-    preloadComponentCodes();
-  }, []);
+    if (mode === 'learning') {
+      const params = new URLSearchParams(window.location.search);
+      if (activeQuestionId) {
+        params.set('q', activeQuestionId);
+        window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+      }
+    }
+  }, [activeQuestionId, mode]);
 
-  // Set active question and collapse sidebar on mobile when question selected
+  useEffect(() => {
+    const loadCode = async () => {
+      setIsLoadingCode(true);
+      const savedCode = localStorage.getItem(`code_${activeQuestionId}`);
+      if (savedCode) {
+        setCode(savedCode);
+      } else if (activeQuestion?.id === 'counter') {
+        setCode(`import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <h2 className="text-xl font-bold mb-4">Counter: {count}</h2>
+      <div className="flex gap-2">
+        <button 
+          onClick={() => setCount(prev => prev + 1)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Increment
+        </button>
+        <button 
+          onClick={() => setCount(prev => prev - 1)}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          Decrement
+        </button>
+      </div>
+    </div>
+  );
+}`);
+      } else {
+        setCode(`export default function Solution() {\n  return <div>Implement {activeQuestion?.title} here</div>\n}`);
+      }
+      setIsLoadingCode(false);
+    };
+
+    if (mode === 'learning') {
+      loadCode();
+    }
+  }, [activeQuestionId, activeQuestion, mode]);
+
+  const handleCodeChange = (newCode: string) => {
+    if (mode === 'learning') {
+      setCode(newCode);
+      localStorage.setItem(`code_${activeQuestionId}`, newCode);
+    }
+  };
+
+  const handleSandboxCodeChange = (newCode: string) => {
+    setSandboxCode(newCode);
+    localStorage.setItem('sandbox_code', newCode);
+  };
+
   const handleQuestionSelect = (id: string) => {
     setActiveQuestionId(id);
     if (window.innerWidth < 1024) {
@@ -67,43 +140,35 @@ function App() {
     }
   };
 
-  // Load code when question changes
-  useEffect(() => {
-    setIsLoadingCode(true);
-    getInitialCode(activeQuestion).then((initialCode) => {
-      setCode(initialCode);
-      setIsLoadingCode(false);
-    });
-  }, [activeQuestionId, activeQuestion]);
-
-  const handleCodeChange = (newCode: string) => {
-    setCode(newCode);
-    localStorage.setItem(`code_${activeQuestionId}`, newCode);
+  const handleSetMode = (newMode: 'learning' | 'sandbox') => {
+    navigate(newMode === 'sandbox' ? '/sandbox' : '/');
   };
 
-  // Keyboard shortcuts
+  const sandboxQuestion: Question = {
+    id: 'sandbox',
+    title: 'Interview Sandbox',
+    description: 'A clean slate for your live technical interview.',
+    type: 'react',
+    category: 'core',
+    difficulty: 'medium',
+    component: () => null,
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + B to toggle sidebar
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault();
-        setIsSidebarCollapsed((prev) => !prev);
-      }
-      // Cmd/Ctrl + K for search (placeholder)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        // Could open a search modal here
+        // Option to add search palette here
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <Header
-        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
+        onToggleSidebar={mode === 'learning' ? () => setIsSidebarCollapsed((prev) => !prev) : undefined}
         isEditorVisible={isEditorVisible}
         isPreviewVisible={isPreviewVisible}
         onToggleEditor={() => {
@@ -114,31 +179,51 @@ function App() {
           if (!isEditorVisible && isPreviewVisible) setIsEditorVisible(true);
           setIsPreviewVisible((prev) => !prev);
         }}
+        mode={mode}
+        onSetMode={handleSetMode}
       />
       <div className="flex-1 flex overflow-hidden relative">
-        <Sidebar
-          questions={questions}
-          activeQuestionId={activeQuestionId}
-          onQuestionSelect={handleQuestionSelect}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
-        />
-        <SplitView
-          isLeftVisible={isEditorVisible}
-          isRightVisible={isPreviewVisible}
-          left={
-            isLoadingCode ? (
-              <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <p className="text-gray-500 dark:text-gray-400">Loading code...</p>
-              </div>
-            ) : (
-              <CodeEditor question={activeQuestion} code={code} onCodeChange={handleCodeChange} />
-            )
-          }
-          right={<Preview question={activeQuestion} code={code} />}
-          leftTitle="Code Editor"
-          rightTitle="Live Preview"
-        />
+        <Routes>
+          <Route path="/" element={
+            <>
+              <Sidebar
+                questions={questions}
+                activeQuestionId={activeQuestionId}
+                onQuestionSelect={handleQuestionSelect}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+              />
+              <SplitView
+                isLeftVisible={isEditorVisible}
+                isRightVisible={isPreviewVisible}
+                left={
+                  isLoadingCode ? (
+                    <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                      <p className="text-gray-500 dark:text-gray-400">Loading code...</p>
+                    </div>
+                  ) : (
+                    <CodeEditor question={activeQuestion} code={code} onCodeChange={handleCodeChange} />
+                  )
+                }
+                right={<Preview question={activeQuestion} code={code} />}
+                leftTitle="Code Editor"
+                rightTitle="Live Preview"
+              />
+            </>
+          } />
+          <Route path="/sandbox" element={
+            <SplitView
+              isLeftVisible={isEditorVisible}
+              isRightVisible={isPreviewVisible}
+              left={
+                <CodeEditor question={sandboxQuestion} code={sandboxCode} onCodeChange={handleSandboxCodeChange} />
+              }
+              right={<Preview question={sandboxQuestion} code={sandboxCode} showConsoleAlways={true} />}
+              leftTitle="Interview Editor"
+              rightTitle="Interview Output"
+            />
+          } />
+        </Routes>
       </div>
     </div>
   );
