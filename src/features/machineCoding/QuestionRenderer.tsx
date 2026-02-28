@@ -6,5 +6,8 @@ interface QuestionRendererProps {
 
 export function QuestionRenderer({ question }: QuestionRendererProps) {
   const Component = question.component;
+  if (!Component) {
+    return null;
+  }
   return <Component />;
 }
